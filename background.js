@@ -16,7 +16,7 @@ const STEAM_API_BASE = 'https://api.steampowered.com';
 
 // Cache TTLs (in milliseconds)
 const STEAM_ID_CACHE_TTL = 24 * 60 * 60 * 1000; // 24 hours
-const PLAYTIME_CACHE_TTL = 60 * 60 * 1000;       // 1 hour
+const PLAYTIME_CACHE_TTL = 12 * 60 * 60 * 1000; // 12 hours
 
 // Throttle: max concurrent requests
 const MAX_CONCURRENT = 3;
@@ -149,7 +149,13 @@ async function getCached(type, id) {
 
   if (!entry) return null;
 
-  const ttl = type === 'steamId' ? STEAM_ID_CACHE_TTL : PLAYTIME_CACHE_TTL;
+  let ttl = STEAM_ID_CACHE_TTL;
+  if (type !== 'steamId') {
+    const settings = await chrome.storage.sync.get('cacheTtlMinutes');
+    const customTtl = settings.cacheTtlMinutes ? settings.cacheTtlMinutes * 60 * 1000 : PLAYTIME_CACHE_TTL;
+    ttl = customTtl;
+  }
+
   if (Date.now() - entry.timestamp > ttl) {
     // Cache expired
     await chrome.storage.local.remove(key);

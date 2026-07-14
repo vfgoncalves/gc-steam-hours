@@ -55,8 +55,10 @@ document.addEventListener('DOMContentLoaded', () => {
     if (result.extensionEnabled !== undefined) {
       extensionEnabled.checked = result.extensionEnabled;
     }
-    if (result.cacheTtlMinutes) {
+    if (result.cacheTtlMinutes !== undefined) {
       cacheTtl.value = result.cacheTtlMinutes;
+    } else {
+      cacheTtl.value = 720;
     }
     if (result.cltHoursLimit !== undefined) {
       cltHoursLimit.value = result.cltHoursLimit;
