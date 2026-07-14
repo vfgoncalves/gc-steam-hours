@@ -1,0 +1,227 @@
+/**
+ * GC Steam Hours — Content Script Styles
+ * 
+ * Styles for the hours badges injected into player cards on the lobby page.
+ * Designed to blend with the GamersClub dark aesthetic.
+ */
+
+/* ─── Hours Badge (Base) ─────────────────────────────────────────────────── */
+
+.gc-hours-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  margin-top: 4px;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 700;
+  font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1;
+  white-space: nowrap;
+  cursor: default;
+  user-select: none;
+  opacity: 0;
+  transform: translateY(-4px);
+  animation: gcHoursBadgeFadeIn 0.3s ease forwards;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  position: relative;
+  z-index: 10;
+}
+
+.gc-hours-badge:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.4);
+}
+
+/* ─── Circular Badge Variant ─────────────────────────────────────────────── */
+
+.gc-hours-badge--circle {
+  width: 16px;
+  height: 16px;
+  padding: 0;
+  border-radius: 50%;
+  aspect-ratio: 1 / 1;
+  align-self: center;
+  margin-left: auto;
+  margin-right: auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.gc-hours-badge--circle .gc-hours-badge__icon {
+  font-size: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+@keyframes gcHoursBadgeFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ─── Badge Icon ─────────────────────────────────────────────────────────── */
+
+.gc-hours-badge__icon {
+  font-size: 9px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.gc-hours-badge__text {
+  font-size: 10px;
+  letter-spacing: 0.3px;
+}
+
+/* ─── Compatibility Indicator Dot ────────────────────────────────────────── */
+
+.gc-hours-badge__indicator {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  box-shadow: 0 0 4px currentColor;
+}
+
+/* ─── Color Variants ─────────────────────────────────────────────────────── */
+
+/* Green: Compatible */
+.gc-hours-badge--green {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(5, 150, 105, 0.3));
+  border: 1px solid rgba(16, 185, 129, 0.4);
+  color: #6ee7b7;
+}
+
+.gc-hours-badge--green .gc-hours-badge__indicator {
+  background-color: #10b981;
+  color: #10b981;
+}
+
+/* Yellow: Too many hours for level */
+.gc-hours-badge--yellow {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(217, 119, 6, 0.3));
+  border: 1px solid rgba(245, 158, 11, 0.4);
+  color: #fcd34d;
+}
+
+.gc-hours-badge--yellow .gc-hours-badge__indicator {
+  background-color: #f59e0b;
+  color: #f59e0b;
+}
+
+/* Red: Too few hours for level (suspect) */
+.gc-hours-badge--red {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.25), rgba(220, 38, 38, 0.45));
+  border: 1px solid rgba(239, 68, 68, 0.6);
+  color: #fca5a5;
+}
+
+.gc-hours-badge--circle.gc-hours-badge--red {
+  animation: gcPulseRedCircle 1.5s ease-in-out infinite, gcHoursBadgeFadeIn 0.3s ease forwards;
+}
+
+@keyframes gcPulseRedCircle {
+  0%, 100% {
+    box-shadow: 0 0 4px rgba(239, 68, 68, 0.4);
+    border-color: rgba(239, 68, 68, 0.6);
+  }
+  50% {
+    box-shadow: 0 0 10px rgba(239, 68, 68, 0.8), 0 0 20px rgba(239, 68, 68, 0.3);
+    border-color: rgba(239, 68, 68, 0.9);
+  }
+}
+
+/* Private profile */
+.gc-hours-badge--private {
+  background: linear-gradient(135deg, rgba(107, 114, 128, 0.2), rgba(75, 85, 99, 0.3));
+  border: 1px solid rgba(107, 114, 128, 0.35);
+  color: #9ca3af;
+}
+
+/* Config needed */
+.gc-hours-badge--config {
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(79, 70, 229, 0.3));
+  border: 1px solid rgba(99, 102, 241, 0.4);
+  color: #a5b4fc;
+  cursor: pointer;
+}
+
+.gc-hours-badge--config:hover {
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.35), rgba(79, 70, 229, 0.45));
+  border-color: rgba(99, 102, 241, 0.6);
+}
+
+/* Error state */
+.gc-hours-badge--error {
+  background: linear-gradient(135deg, rgba(107, 114, 128, 0.15), rgba(75, 85, 99, 0.2));
+  border: 1px solid rgba(107, 114, 128, 0.25);
+  color: #6b7280;
+}
+
+/* ─── Loading State ──────────────────────────────────────────────────────── */
+
+.gc-hours-badge--loading {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(37, 99, 235, 0.2));
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  color: #93c5fd;
+  padding: 3px 10px;
+}
+
+.gc-hours-badge__spinner {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border: 2px solid rgba(147, 197, 253, 0.3);
+  border-top-color: #93c5fd;
+  border-radius: 50%;
+  animation: gcSpinner 0.6s linear infinite;
+}
+
+@keyframes gcSpinner {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ─── Team Room Borders ─────────────────────────────────────────────────── */
+
+.LobbyRoom {
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.gc-team-border--red {
+  border: 1px solid rgba(239, 68, 68, 0.8) !important;
+  box-shadow: 0 0 10px rgba(239, 68, 68, 0.25), inset 0 0 10px rgba(239, 68, 68, 0.05) !important;
+}
+
+.gc-team-border--green {
+  border: 1px solid rgba(16, 185, 129, 0.8) !important;
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.2), inset 0 0 10px rgba(16, 185, 129, 0.05) !important;
+}
+
+/* ─── Badge Row Container ────────────────────────────────────────────────── */
+
+.gc-badges-row {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+  width: 100%;
+}
+
+/* Remove default margin when inside a row to prevent double spacing */
+.gc-badges-row .gc-hours-badge {
+  margin-top: 0;
+}

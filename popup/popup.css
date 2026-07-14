@@ -1,0 +1,244 @@
+/**
+ * GC Steam Hours — Popup Styles
+ */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  width: 300px;
+  min-height: 100px;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  background: #0f1923;
+  color: #e2e8f0;
+  overflow-x: hidden;
+}
+
+/* ─── Popup Container ────────────────────────────────────────────────────── */
+
+.popup {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* ─── Header ─────────────────────────────────────────────────────────────── */
+
+.popup__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.popup__logo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.popup__logo-icon {
+  font-size: 20px;
+  line-height: 1;
+}
+
+.popup__logo-text {
+  font-size: 15px;
+  font-weight: 700;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.popup__version {
+  font-size: 10px;
+  color: #64748b;
+  background: rgba(100, 116, 139, 0.15);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+/* ─── Sections ───────────────────────────────────────────────────────────── */
+
+.popup__section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.popup__section-title {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: #64748b;
+  font-weight: 600;
+}
+
+/* ─── API Status ─────────────────────────────────────────────────────────── */
+
+.popup__status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.popup__status--ok {
+  background: rgba(16, 185, 129, 0.08);
+  border-color: rgba(16, 185, 129, 0.2);
+}
+
+.popup__status--error {
+  background: rgba(245, 158, 11, 0.08);
+  border-color: rgba(245, 158, 11, 0.2);
+}
+
+.popup__status-icon {
+  font-size: 16px;
+  line-height: 1;
+}
+
+.popup__status-text {
+  font-size: 12px;
+  color: #cbd5e1;
+}
+
+/* ─── Stats ──────────────────────────────────────────────────────────────── */
+
+.popup__stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.popup__stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 10px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+}
+
+.popup__stat-value {
+  font-size: 20px;
+  font-weight: 700;
+  color: #f1f5f9;
+}
+
+.popup__stat-label {
+  font-size: 10px;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* ─── Actions ────────────────────────────────────────────────────────────── */
+
+.popup__actions {
+  display: flex;
+  gap: 8px;
+}
+
+.popup__btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-family: inherit;
+}
+
+.popup__btn--primary {
+  background: linear-gradient(135deg, #3b82f6, #6366f1);
+  color: white;
+  border: 1px solid rgba(99, 102, 241, 0.3);
+}
+
+.popup__btn--primary:hover {
+  background: linear-gradient(135deg, #2563eb, #4f46e5);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+}
+
+.popup__btn--secondary {
+  background: rgba(255, 255, 255, 0.05);
+  color: #94a3b8;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.popup__btn--secondary:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #e2e8f0;
+  transform: translateY(-1px);
+}
+
+.popup__btn:active {
+  transform: translateY(0) !important;
+}
+
+/* ─── Legend ──────────────────────────────────────────────────────────────── */
+
+.popup__legend {
+  padding-top: 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.popup__legend-items {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.popup__legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  color: #94a3b8;
+}
+
+.popup__legend-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.popup__legend-dot--green {
+  background: #10b981;
+  box-shadow: 0 0 6px rgba(16, 185, 129, 0.4);
+}
+
+.popup__legend-dot--yellow {
+  background: #f59e0b;
+  box-shadow: 0 0 6px rgba(245, 158, 11, 0.4);
+}
+
+.popup__legend-dot--red {
+  background: #ef4444;
+  box-shadow: 0 0 6px rgba(239, 68, 68, 0.4);
+}
+
+.popup__legend-dot--gray {
+  background: #6b7280;
+  box-shadow: 0 0 6px rgba(107, 114, 128, 0.3);
+}

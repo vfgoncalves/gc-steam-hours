@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GC Steam Hours — Configurações</title>
+  <link rel="stylesheet" href="options.css">
+</head>
+<body>
+  <div class="options">
+    <!-- Header -->
+    <div class="options__header">
+      <div class="options__title-row">
+        <span class="options__logo-icon">⏱</span>
+        <h1 class="options__title">GC Steam Hours</h1>
+      </div>
+      <p class="options__subtitle">Configurações da extensão</p>
+    </div>
+
+    <!-- API Key Section -->
+    <div class="options__card">
+      <h2 class="options__card-title">🔑 Steam Web API Key</h2>
+      <p class="options__card-desc">
+        Necessária para consultar as horas jogadas na Steam. 
+        Obtenha sua key gratuita em 
+        <a href="https://steamcommunity.com/dev/apikey" target="_blank" rel="noopener">
+          steamcommunity.com/dev/apikey
+        </a>
+      </p>
+
+      <div class="options__input-group">
+        <input 
+          type="password" 
+          id="apiKeyInput" 
+          class="options__input" 
+          placeholder="Cole sua Steam API Key aqui..."
+          autocomplete="off"
+          spellcheck="false"
+        >
+        <button class="options__btn-icon" id="toggleKeyVisibility" title="Mostrar/esconder key">
+          👁️
+        </button>
+      </div>
+
+      <div class="options__btn-group">
+        <button class="options__btn options__btn--secondary" id="testKeyBtn">
+          🧪 Testar Key
+        </button>
+        <button class="options__btn options__btn--primary" id="saveKeyBtn">
+          💾 Salvar
+        </button>
+      </div>
+
+      <div class="options__feedback" id="keyFeedback"></div>
+    </div>
+
+    <!-- How to get API Key -->
+    <div class="options__card">
+      <h2 class="options__card-title">📋 Como obter a API Key</h2>
+      <ol class="options__steps">
+        <li>Acesse <a href="https://steamcommunity.com/dev/apikey" target="_blank" rel="noopener">steamcommunity.com/dev/apikey</a></li>
+        <li>Faça login com sua conta Steam</li>
+        <li>Em "Domain Name", coloque qualquer nome (ex: <code>gcextension</code>)</li>
+        <li>Clique em "Register" para gerar sua key</li>
+        <li>Copie a key gerada e cole no campo acima</li>
+      </ol>
+    </div>
+
+    <!-- Settings -->
+    <div class="options__card">
+      <h2 class="options__card-title">⚙️ Preferências</h2>
+
+      <div class="options__setting">
+        <div class="options__setting-info">
+          <span class="options__setting-label">Extensão ativa</span>
+          <span class="options__setting-desc">Habilitar/desabilitar os badges no lobby</span>
+        </div>
+        <label class="options__toggle">
+          <input type="checkbox" id="extensionEnabled" checked>
+          <span class="options__toggle-slider"></span>
+        </label>
+      </div>
+
+      <div class="options__setting">
+        <div class="options__setting-info">
+          <span class="options__setting-label">TTL do cache de horas</span>
+          <span class="options__setting-desc">Tempo para revalidar horas jogadas (em minutos)</span>
+        </div>
+        <input 
+          type="number" 
+          id="cacheTtl" 
+          class="options__input options__input--small" 
+          value="60" 
+          min="5" 
+          max="1440"
+        >
+      </div>
+
+      <div class="options__setting">
+        <div class="options__setting-info">
+          <span class="options__setting-label">Limite CLT (Horas diárias)</span>
+          <span class="options__setting-desc">Limite de horas jogadas por dia nos últimos 14 dias</span>
+        </div>
+        <input 
+          type="number" 
+          id="cltHoursLimit" 
+          class="options__input options__input--small" 
+          value="3" 
+          min="1" 
+          max="24"
+          step="0.5"
+        >
+      </div>
+
+      <button class="options__btn options__btn--primary options__btn--full" id="saveSettingsBtn">
+        💾 Salvar Preferências
+      </button>
+      <div class="options__feedback" id="settingsFeedback"></div>
+    </div>
+
+    <!-- Level Ranges -->
+    <div class="options__card">
+      <h2 class="options__card-title">📊 Faixas de Nível × Horas</h2>
+      <p class="options__card-desc">
+        Configure as horas mínimas esperadas para cada nível da GamersClub. 
+        Esses valores são usados para classificar a compatibilidade entre nível e tempo de jogo.
+      </p>
+
+      <div class="options__legend-inline">
+        <span class="options__legend-tag options__legend-tag--red">🔴 Abaixo do mín. + KDR/Steam suspeito = Smurf</span>
+        <span class="options__legend-tag options__legend-tag--yellow">🟡 Abaixo do mín. = Possível Smurf</span>
+        <span class="options__legend-tag options__legend-tag--green">🟢 Acima do mín. = Limpo</span>
+      </div>
+
+      <div class="options__ranges-container">
+        <table class="options__ranges-table" id="rangesTable">
+          <thead>
+            <tr>
+              <th>Nível GC</th>
+              <th>Horas Mín.</th>
+            </tr>
+          </thead>
+          <tbody id="rangesTableBody">
+            <!-- Dynamically populated from JS (levels 1-20) -->
+          </tbody>
+        </table>
+      </div>
+
+      <div class="options__btn-group">
+        <button class="options__btn options__btn--secondary" id="resetRangesBtn">
+          🔄 Restaurar Padrão
+        </button>
+        <button class="options__btn options__btn--primary" id="saveRangesBtn">
+          💾 Salvar Faixas
+        </button>
+      </div>
+      <div class="options__feedback" id="rangesFeedback"></div>
+    </div>
+
+    <!-- Footer -->
+    <div class="options__footer">
+      <span>GC Steam Hours v<span id="version"></span></span>
+      <span>·</span>
+      <span>Dados via <a href="https://steamcommunity.com/dev" target="_blank" rel="noopener">Steam Web API</a></span>
+    </div>
+  </div>
+
+  <script src="options.js"></script>
+</body>
+</html>

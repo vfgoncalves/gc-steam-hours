@@ -1,0 +1,20 @@
+# Compiled / Zipped Extension
+GcExtension.zip
+
+# Chrome Web Store Assets (Mockups & Banners)
+chrome_store_banner_1280x800.jpg
+chrome_store_options_1280x800.jpg
+options_page_screenshot_*.jpg
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# IDEs and editors configs
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp

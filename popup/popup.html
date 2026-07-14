@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GC Steam Hours</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="popup">
+    <!-- Header -->
+    <div class="popup__header">
+      <div class="popup__logo">
+        <span class="popup__logo-icon">⏱</span>
+        <span class="popup__logo-text">GC Steam Hours</span>
+      </div>
+      <span class="popup__version" id="version"></span>
+    </div>
+
+    <!-- API Key Status -->
+    <div class="popup__section">
+      <div class="popup__status" id="apiStatus">
+        <span class="popup__status-icon" id="apiStatusIcon">⏳</span>
+        <span class="popup__status-text" id="apiStatusText">Verificando...</span>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="popup__section">
+      <h3 class="popup__section-title">Cache</h3>
+      <div class="popup__stats">
+        <div class="popup__stat">
+          <span class="popup__stat-value" id="cachedPlayers">—</span>
+          <span class="popup__stat-label">Jogadores</span>
+        </div>
+        <div class="popup__stat">
+          <span class="popup__stat-value" id="cachedHours">—</span>
+          <span class="popup__stat-label">Horas salvas</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="popup__actions">
+      <button class="popup__btn popup__btn--secondary" id="clearCacheBtn">
+        🗑️ Limpar Cache
+      </button>
+      <button class="popup__btn popup__btn--primary" id="optionsBtn">
+        ⚙️ Configurações
+      </button>
+    </div>
+
+    <!-- Legend -->
+    <div class="popup__section popup__legend">
+      <h3 class="popup__section-title">Legenda</h3>
+      <div class="popup__legend-items">
+        <div class="popup__legend-item">
+          <span class="popup__legend-dot popup__legend-dot--green"></span>
+          <span>Compatível</span>
+        </div>
+        <div class="popup__legend-item">
+          <span class="popup__legend-dot popup__legend-dot--yellow"></span>
+          <span>Muitas horas / nível baixo</span>
+        </div>
+        <div class="popup__legend-item">
+          <span class="popup__legend-dot popup__legend-dot--red"></span>
+          <span>Poucas horas / nível alto</span>
+        </div>
+        <div class="popup__legend-item">
+          <span class="popup__legend-dot popup__legend-dot--gray"></span>
+          <span>Perfil privado</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
