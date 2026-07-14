@@ -11,6 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const extensionEnabled = document.getElementById('extensionEnabled');
   const cacheTtl = document.getElementById('cacheTtl');
   const cltHoursLimit = document.getElementById('cltHoursLimit');
+  const concurrentPlayersLimit = document.getElementById('concurrentPlayersLimit');
   const saveSettingsBtn = document.getElementById('saveSettingsBtn');
   const settingsFeedback = document.getElementById('settingsFeedback');
   const saveRangesBtn = document.getElementById('saveRangesBtn');
@@ -48,7 +49,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // ─── Load saved settings ─────────────────────────────────────────────────
 
-  chrome.storage.sync.get(['steamApiKey', 'extensionEnabled', 'cacheTtlMinutes', 'cltHoursLimit', 'levelRanges'], (result) => {
+  chrome.storage.sync.get(['steamApiKey', 'extensionEnabled', 'cacheTtlMinutes', 'cltHoursLimit', 'concurrentPlayersLimit', 'levelRanges'], (result) => {
     if (result.steamApiKey) {
       apiKeyInput.value = result.steamApiKey;
     }
@@ -64,6 +65,11 @@ document.addEventListener('DOMContentLoaded', () => {
       cltHoursLimit.value = result.cltHoursLimit;
     } else {
       cltHoursLimit.value = 3;
+    }
+    if (result.concurrentPlayersLimit !== undefined) {
+      concurrentPlayersLimit.value = result.concurrentPlayersLimit;
+    } else {
+      concurrentPlayersLimit.value = 3;
     }
     // Load level ranges
     loadRangesToUI(result.levelRanges || DEFAULT_RANGES);
@@ -187,6 +193,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const enabled = extensionEnabled.checked;
     const ttl = parseInt(cacheTtl.value, 10);
     const cltLimit = parseFloat(cltHoursLimit.value);
+    const concurrentLimit = parseInt(concurrentPlayersLimit.value, 10);
 
     if (isNaN(ttl) || ttl < 5 || ttl > 1440) {
       showFeedback(settingsFeedback, 'error', '❌ TTL deve ser entre 5 e 1440 minutos');
@@ -198,10 +205,16 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
+    if (isNaN(concurrentLimit) || concurrentLimit < 1 || concurrentLimit > 10) {
+      showFeedback(settingsFeedback, 'error', '❌ O limite de jogadores simultâneos deve ser entre 1 e 10');
+      return;
+    }
+
     chrome.storage.sync.set({
       extensionEnabled: enabled,
       cacheTtlMinutes: ttl,
-      cltHoursLimit: cltLimit
+      cltHoursLimit: cltLimit,
+      concurrentPlayersLimit: concurrentLimit
     }, () => {
       showFeedback(settingsFeedback, 'success', '✅ Preferências salvas!');
     });

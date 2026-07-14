@@ -41,18 +41,22 @@
   // Active configurations (loaded from storage)
   let activeRanges = DEFAULT_RANGES;
   let activeCltLimit = 3;
+  let activeConcurrentLimit = 3;
 
   /**
    * Load settings from chrome.storage.sync.
    */
   async function loadSettings() {
     try {
-      const result = await chrome.storage.sync.get(['levelRanges', 'cltHoursLimit']);
+      const result = await chrome.storage.sync.get(['levelRanges', 'cltHoursLimit', 'concurrentPlayersLimit']);
       if (result.levelRanges && Array.isArray(result.levelRanges) && result.levelRanges.length === 20) {
         activeRanges = result.levelRanges;
       }
       if (result.cltHoursLimit !== undefined) {
         activeCltLimit = result.cltHoursLimit;
+      }
+      if (result.concurrentPlayersLimit !== undefined) {
+        activeConcurrentLimit = result.concurrentPlayersLimit;
       }
     } catch (e) {
       console.warn('[GC Steam Hours] Failed to load settings, using defaults');
@@ -69,6 +73,10 @@
       if (changes.cltHoursLimit) {
         activeCltLimit = changes.cltHoursLimit.newValue !== undefined ? changes.cltHoursLimit.newValue : 3;
         console.log('[GC Steam Hours] CLT limit updated:', activeCltLimit);
+      }
+      if (changes.concurrentPlayersLimit) {
+        activeConcurrentLimit = changes.concurrentPlayersLimit.newValue !== undefined ? changes.concurrentPlayersLimit.newValue : 3;
+        console.log('[GC Steam Hours] Concurrency limit updated:', activeConcurrentLimit);
       }
     }
   });
@@ -341,7 +349,6 @@
   // ─── Player Processing Queue & Same-Origin Scraper ────────────────────────
 
   // Limits the number of concurrent network checks from the content script
-  const MAX_CONCURRENT_PLAYERS = 3;
   let activePlayerRequests = 0;
   const playerQueue = [];
 
@@ -353,7 +360,7 @@
   }
 
   function processPlayerQueue() {
-    while (activePlayerRequests < MAX_CONCURRENT_PLAYERS && playerQueue.length > 0) {
+    while (activePlayerRequests < activeConcurrentLimit && playerQueue.length > 0) {
       const { resolve, reject, fn } = playerQueue.shift();
       activePlayerRequests++;
       fn()
@@ -691,6 +698,166 @@
     }
   }
 
+  // ─── Player Profile Page Processing ───────────────────────────────────────
+
+  /**
+   * Process the GamersClub player profile page.
+   * Resolves the profile owner's level and Steam details and injects badges.
+   */
+  async function processProfilePage() {
+    const match = window.location.pathname.match(/\/(jogador|player)\/(\d+)/);
+    if (!match) return;
+
+    const gcPath = match[1];
+    const gcId = match[2];
+
+    // Check if we already processed this page to avoid loop
+    const existing = document.querySelector('.gc-badges-row--profile');
+    if (existing && existing.dataset.gcId === gcId) return;
+
+    console.log(`[GC Steam Hours] Processing profile page for player ${gcId}`);
+
+    // Wait for the LevelBadge to render
+    let levelContainer = null;
+    let attempts = 0;
+    
+    // Poll for the LevelBadge (SPA render might be deferred)
+    while (!levelContainer && attempts < 20) {
+      levelContainer = document.querySelector('[class*="LevelBadge"]');
+      if (!levelContainer) {
+        await new Promise(resolve => setTimeout(resolve, 500));
+        attempts++;
+      }
+    }
+
+    if (!levelContainer) {
+      console.warn(`[GC Steam Hours] Level badge container not found on profile page for ${gcId}`);
+      return;
+    }
+
+    // Extract level
+    const digits = levelContainer.textContent.replace(/\D/g, '');
+    const level = digits ? parseInt(digits, 10) : 0;
+
+    // Clean up any existing badge row
+    if (existing) existing.remove();
+
+    // Show a loading state next to the level badge
+    const loadingBadge = document.createElement('div');
+    loadingBadge.className = 'gc-hours-badge gc-hours-badge--loading gc-hours-badge--circle';
+    loadingBadge.innerHTML = `<span class="gc-hours-badge__spinner"></span>`;
+    loadingBadge.title = 'Buscando horas de CS2...';
+    
+    const wrapper = document.createElement('div');
+    wrapper.className = 'gc-badges-row gc-badges-row--profile';
+    wrapper.dataset.gcId = gcId;
+    wrapper.appendChild(loadingBadge);
+    
+    levelContainer.parentNode.insertBefore(wrapper, levelContainer.nextSibling);
+
+    try {
+      // Get player data (checks cache first, scrapes same-origin if miss)
+      let data = await chrome.runtime.sendMessage({
+        action: 'getPlayerData',
+        gcId: gcId,
+        gcPath: gcPath
+      });
+
+      if (data && data.error === 'CACHE_MISS') {
+        const scraped = await scrapeGCProfileSameOrigin(gcId, gcPath);
+        if (scraped && scraped.steamUrl) {
+          const { steamUrl, kdr } = scraped;
+          const steamId64 = parseSteamId64FromUrl(steamUrl);
+          if (steamId64) {
+            data = await chrome.runtime.sendMessage({
+              action: 'getPlayerDataWithSteamId',
+              gcId: gcId,
+              steamId64: steamId64,
+              kdr: kdr
+            });
+          } else {
+            data = await chrome.runtime.sendMessage({
+              action: 'getPlayerDataWithSteamUrl',
+              gcId: gcId,
+              steamUrl: steamUrl,
+              kdr: kdr
+            });
+          }
+        } else {
+          data = { error: 'STEAM_ID_NOT_FOUND', gcId };
+        }
+      }
+
+      // Remove loading state
+      wrapper.innerHTML = '';
+
+      if (data.error || data.private) {
+        const badge = document.createElement('div');
+        badge.className = 'gc-hours-badge gc-hours-badge--circle';
+        
+        if (data.private) {
+          badge.classList.add('gc-hours-badge--private');
+          badge.innerHTML = `<span class="gc-hours-badge__icon">🔒</span>`;
+          const steamLvlFormatted = data.steamLevel !== null && data.steamLevel !== undefined ? ` | Steam Lvl ${data.steamLevel}` : '';
+          badge.title = `Perfil Steam privado — horas de jogo não disponíveis${steamLvlFormatted}`;
+        } else {
+          badge.classList.add('gc-hours-badge--error');
+          badge.innerHTML = `<span class="gc-hours-badge__icon">❓</span>`;
+          badge.title = 'Não foi possível carregar as horas de CS2';
+        }
+        wrapper.appendChild(badge);
+      } else {
+        const kdr = (data.kdr !== undefined && data.kdr !== null) ? data.kdr : null;
+        const steamLevel = data.steamLevel !== undefined ? data.steamLevel : null;
+        const analysis = analyzeCompatibility(level, data.hours, kdr, steamLevel);
+
+        const badge = document.createElement('div');
+        badge.className = `gc-hours-badge gc-hours-badge--circle gc-compatibility-badge gc-hours-badge--${analysis.color}`;
+
+        let icon = '';
+        let tooltip = '';
+        if (analysis.color === 'red') {
+          icon = '✖';
+          tooltip = 'Smurf safado';
+        } else if (analysis.color === 'green') {
+          icon = '✔';
+          tooltip = 'Limpo';
+        } else if (analysis.color === 'yellow') {
+          icon = '❓';
+          tooltip = 'Possível smurf safado';
+        }
+
+        badge.innerHTML = `<span class="gc-hours-badge__icon">${icon}</span>`;
+        const kdrFormatted = kdr !== null ? ` | KDR ${kdr.toFixed(2)}` : '';
+        const steamLvlFormatted = steamLevel !== null ? ` | Steam Lvl ${steamLevel}` : '';
+        badge.title = `${tooltip} (${formatHours(data.hours)} | Nível ${level}${kdrFormatted}${steamLvlFormatted})`;
+
+        // CLT Badge
+        const minutes2weeks = data.minutes2weeks || 0;
+        const dailyHours = (minutes2weeks / 60) / 14;
+        const cltOk = dailyHours <= activeCltLimit;
+
+        const cltBadge = document.createElement('div');
+        cltBadge.className = `gc-hours-badge gc-hours-badge--circle gc-clt-badge gc-hours-badge--${cltOk ? 'green' : 'red'}`;
+        cltBadge.innerHTML = `<span class="gc-hours-badge__icon">💼</span>`;
+        cltBadge.title = cltOk
+          ? `Dentro das regras CLT (Média: ${dailyHours.toFixed(1)}h/dia jogados recentemente)`
+          : `Fora das regras CLT (Média: ${dailyHours.toFixed(1)}h/dia jogados recentemente)`;
+
+        wrapper.appendChild(badge);
+        wrapper.appendChild(cltBadge);
+      }
+    } catch (error) {
+      console.error(`[GC Steam Hours] Error processing profile page for player ${gcId}:`, error);
+      wrapper.innerHTML = '';
+      const badge = document.createElement('div');
+      badge.className = 'gc-hours-badge gc-hours-badge--circle gc-hours-badge--error';
+      badge.innerHTML = `<span class="gc-hours-badge__icon">⚠️</span>`;
+      badge.title = `Erro: ${error.message}`;
+      wrapper.appendChild(badge);
+    }
+  }
+
   // ─── Page Scanning ────────────────────────────────────────────────────────
 
   /**
@@ -762,35 +929,54 @@
   }
 
   let scanDebounceTimer = null;
+  let lastPathname = window.location.pathname;
 
-  // ─── Initialization ───────────────────────────────────────────────────────
-
-  async function init() {
-    // Check if extension is enabled
+  async function handlePageChange() {
     const settings = await chrome.storage.sync.get('extensionEnabled');
     if (settings.extensionEnabled === false) {
       console.log('[GC Steam Hours] Extension is disabled');
       return;
     }
 
-    console.log('[GC Steam Hours] Extension loaded on lobby page');
-
-    // Load settings from storage
     await loadSettings();
 
-    // Initial scan
-    scanForPlayers();
+    const isProfile = window.location.pathname.match(/\/(jogador|player)\/\d+/);
+    if (isProfile) {
+      processProfilePage();
+    } else if (window.location.pathname.includes('/lobby')) {
+      scanForPlayers();
+    }
+  }
 
-    // Watch for dynamic content changes
+  // ─── Initialization ───────────────────────────────────────────────────────
+
+  async function init() {
+    console.log('[GC Steam Hours] Extension initialized');
+
+    // Run page-specific logic on load
+    await handlePageChange();
+
+    // Watch for dynamic content changes (lobby player additions)
     setupObserver();
 
-    // Re-scan periodically as a fallback (every 5 seconds)
+    // Re-scan periodically as a fallback (lobby page only)
     setInterval(() => {
-      const cards = document.querySelectorAll('a.LobbyPlayerVertical:not(:has(.gc-hours-badge))');
-      if (cards.length > 0) {
-        scanForPlayers();
+      if (window.location.pathname.includes('/lobby')) {
+        const cards = document.querySelectorAll('a.LobbyPlayerVertical:not(:has(.gc-hours-badge)):not(:has(.gc-badges-row))');
+        if (cards.length > 0) {
+          scanForPlayers();
+        }
       }
     }, 5000);
+
+    // Watch for React SPA client-side routing pathname transitions
+    setInterval(() => {
+      if (window.location.pathname !== lastPathname) {
+        lastPathname = window.location.pathname;
+        console.log('[GC Steam Hours] Pathname transitioned to:', lastPathname);
+        handlePageChange();
+      }
+    }, 1000);
   }
 
   // Start when DOM is ready
